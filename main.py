@@ -3,7 +3,7 @@ import cvzone
 from cvzone.ColorModule import ColorFinder
 import numpy as np
 
-video = cv2.VideoCapture('Videos/vid (1).mp4')
+video = cv2.VideoCapture('Videos/vid (3).mp4')
 
 myColorFinder = ColorFinder(False)
 hsvValues = {'hmin': 8, 'smin': 96, 'vmin': 115, 'hmax': 14, 'smax': 255, 'vmax': 255}
@@ -15,7 +15,6 @@ xList = [item for item in range(0,1300)]
 
 while True:
     _,img = video.read()
-    #img = cv2.imread('Ball.png')
     img = img[0:900,:] #retirar parte de baixo
     #color ball detection
     imgColor,mask = myColorFinder.update(img,hsvValues)
@@ -28,21 +27,23 @@ while True:
         pointsListY.append(contours[0]['center'][1])
 
     if pointsListX:
-        # polinominal regression  y = Ax^2 + Bx + C
         #achar o coeficiente
-        A,B,C = np.polyfit(pointsListX,pointsListY,2)
-
-        for i,point in enumerate(pointsList):
+        coeff = np.polyfit(pointsListX,pointsListY,2)
+        for point in pointsList:
             cv2.circle(imgContour,point,10,(0,255,0),cv2.FILLED)
-            if i >=1:
-                cv2.line(imgContour,point,pointsList[i-1],(0,255,0),2)
 
         for x in xList:
-            y = int(A *x**2 + B *x + C)
+            poly = np.poly1d(coeff)
+            y = int(poly(x))
             cv2.circle(imgContour, (x,y), 2, (255, 0, 255), cv2.FILLED)
+            if x >=330 and x <=410 and y >=580 and y<=610:
+                #print('Dentro')
+                cv2.rectangle(imgContour,(550,600),(850,660),(0,255,0),-1)
+                cv2.putText(imgContour,'ACERTOU',(560,650),cv2.FONT_HERSHEY_SIMPLEX,2,(255,255,255),5)
+
 
     #display
-    imgColor = cv2.resize(imgColor, (0, 0), None, 0.7, 0.7)
+    #imgColor = cv2.resize(imgColor, (0, 0), None, 0.7, 0.7)
     # cv2.imshow('Video',img)
     cv2.imshow('Video', imgContour)
     cv2.waitKey(100)
